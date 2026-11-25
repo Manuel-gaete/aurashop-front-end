@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { login as apiLogin, registro as apiRegistro, getSession, saveSession, clearSession } from '../services/api';
+import { login as apiLogin, registro as apiRegistro, getMe, getSession, saveSession, clearSession } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -16,6 +16,14 @@ export function AuthProvider({ children }) {
     const alExpirar = () => setUser(null);
     window.addEventListener('aurashop:sesion-expirada', alExpirar);
     return () => window.removeEventListener('aurashop:sesion-expirada', alExpirar);
+  }, []);
+
+  // Al cargar la página, confirma con el servidor que la sesión guardada sigue siendo válida.
+  // Si el token venció intenta renovarlo; si no puede, api.js cierra la sesión.
+  useEffect(() => {
+    if (getSession()) {
+      getMe().catch(() => {});
+    }
   }, []);
 
   async function login(correo, password) {
